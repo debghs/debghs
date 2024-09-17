@@ -41,13 +41,19 @@ def format_plural(unit):
 
 
 def simple_request(func_name, query, variables):
-    """
-    Returns a request, or raises an Exception if the response does not succeed.
-    """
-    request = requests.post('https://api.github.com/graphql', json={'query': query, 'variables':variables}, headers=HEADERS)
+    """ Returns a request, or raises an Exception if the response does not succeed. """
+    request = requests.post('(link unavailable)', json={'query': query, 'variables':variables}, headers=HEADERS)
+    
     if request.status_code == 200:
-        return request
-    raise Exception(func_name, ' has failed with a', request.status_code, request.text, QUERY_COUNT)
+        try:
+            data = request.json()
+            if data['data'] is None or data['data']['user'] is None:
+                raise Exception(f"{func_name} received empty data: {data}")
+            return request
+        except KeyError as e:
+            raise Exception(f"{func_name} received malformed data: {e}, {request.text}")
+    else:
+        raise Exception(func_name, ' has failed with a', request.status_code, request.text, QUERY_COUNT)
 
 
 def graph_commits(start_date, end_date):
