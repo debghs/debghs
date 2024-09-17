@@ -49,7 +49,7 @@ def fetch_repositories(username):
                             name
                             target {
                                 ... on Commit {
-                                    history {
+                                    history(first: 100) {
                                         totalCount
                                     }
                                 }
@@ -81,33 +81,6 @@ def fetch_repositories(username):
     return repos
 
 def count_user_contributions(username):
-    query = '''
-    query($login: String!, $cursor: String) {
-        user(login: $login) {
-            repositories(first: 100, after: $cursor) {
-                nodes {
-                    name
-                    refs(refPrefix: "refs/heads/", first: 100) {
-                        nodes {
-                            name
-                            target {
-                                ... on Commit {
-                                    history(first: 100, after: $cursor) {
-                                        totalCount
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                pageInfo {
-                    hasNextPage
-                    endCursor
-                }
-            }
-        }
-    }'''
-    variables = {'login': username, 'cursor': None}
     repos = fetch_repositories(username)
     contributed_to = 0
     total_commits = 0
@@ -123,7 +96,7 @@ def count_user_contributions(username):
 
 def get_user_commits(username):
     query = '''
-    query($login: String!, $cursor: String) {
+    query($login: String!) {
         user(login: $login) {
             contributionsCollection(from: "2023-01-01T00:00:00Z", to: "2024-01-01T00:00:00Z") {
                 totalCommitContributions
