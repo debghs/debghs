@@ -37,18 +37,16 @@ def user_getter(username):
     user = data.get('user', {})
     return {'id': user.get('id', 'No ID found')}, user.get('createdAt', 'No creation date found')
 
-def user_repos(username):
+def fetch_repositories(username):
     query = '''
-    query($login: String!){
+    query($login: String!, $cursor: String) {
         user(login: $login) {
-            repositories(first: 100) {
+            repositories(first: 100, after: $cursor) {
                 nodes {
                     name
-                    owner {
-                        login
-                    }
-                    refs(first: 100) {
+                    refs(refPrefix: "refs/heads/", first: 100) {
                         nodes {
+                            name
                             target {
                                 ... on Commit {
                                     history {
@@ -59,21 +57,32 @@ def user_repos(username):
                         }
                     }
                 }
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
             }
         }
     }'''
-    variables = {'login': username}
-    request = simple_request(query, variables)
-    response_data = request.json()
-    print("API Response:", response_data)  # Debugging line
-    data = response_data.get('data', {})
-    repos = data.get('user', {}).get('repositories', {}).get('nodes', [])
+    variables = {'login': username, 'cursor': None}
+    repos = []
+    while True:
+        request = simple_request(query, variables)
+        response_data = request.json()
+        print("API Response:", response_data)  # Debugging line
+        data = response_data.get('data', {})
+        repositories = data.get('user', {}).get('repositories', {})
+        repos.extend(repositories.get('nodes', []))
+        page_info = repositories.get('pageInfo', {})
+        if page_info.get('hasNextPage'):
+            variables['cursor'] = page_info.get('endCursor')
+        else:
+            break
     return repos
 
 def count_user_contributions(repos):
     contributed_to = 0
     total_commits = 0
-    lines_of_code = 0  # This is a placeholder; real calculation is complex and not directly available from GraphQL.
 
     for repo in repos:
         repo_commits = sum(ref['target']['history']['totalCount'] for ref in repo['refs']['nodes'] if 'target' in ref)
@@ -81,7 +90,7 @@ def count_user_contributions(repos):
             contributed_to += 1
         total_commits += repo_commits
 
-    return len(repos), contributed_to, total_commits, lines_of_code
+    return len(repos), contributed_to, total_commits
 
 if __name__ == '__main__':
     user_data, acc_date = user_getter(USER_NAME)
@@ -91,8 +100,8 @@ if __name__ == '__main__':
         acc_date = datetime.datetime.strptime(acc_date, '%Y-%m-%dT%H:%M:%SZ')
         age_data = daily_readme(acc_date)
         
-        repos = user_repos(USER_NAME)
-        num_repos, num_contributed_to, num_commits, lines_of_code = count_user_contributions(repos)
+        repos = fetch_repositories(USER_NAME)
+        num_repos, num_contributed_to, num_commits = count_user_contributions(repos)
         
         with open('README.md', 'w') as f:
             f.write(f"# User Information\n\n")
@@ -101,4 +110,4 @@ if __name__ == '__main__':
             f.write(f"- Number of Repositories: {num_repos}\n")
             f.write(f"- Number of Repositories Contributed To: {num_contributed_to}\n")
             f.write(f"- Number of Commits: {num_commits}\n")
-            f.write(f"- Lines of Code Written (estimated): {lines_of_code}\n")
+            f.write(f"- Lines of Code Written (estimated): N/A\n")
