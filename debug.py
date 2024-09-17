@@ -13,12 +13,12 @@ def daily_readme(birthday):
         ' 🎂' if (diff.months == 0 and diff.days == 0) else '')
 
 def simple_request(query, variables):
-    request = requests.post('https://api.github.com/graphql', json={'query': query, 'variables': variables}, headers=HEADERS)
-    if request.status_code == 200:
-        return request
+    response = requests.post('https://api.github.com/graphql', json={'query': query, 'variables': variables}, headers=HEADERS)
+    if response.status_code == 200:
+        return response
     else:
-        print(f"Request failed with status code {request.status_code}")
-        print(request.text)
+        print(f"Request failed with status code {response.status_code}")
+        print(response.text)
         raise Exception('Request failed')
 
 def user_getter(username):
@@ -30,8 +30,8 @@ def user_getter(username):
         }
     }'''
     variables = {'login': username}
-    request = simple_request(query, variables)
-    response_data = request.json()
+    response = simple_request(query, variables)
+    response_data = response.json()
     print("API Response:", response_data)  # Debugging line
     data = response_data.get('data', {})
     user = data.get('user', {})
@@ -67,8 +67,8 @@ def fetch_repositories(username):
     variables = {'login': username, 'cursor': None}
     repos = []
     while True:
-        request = simple_request(query, variables)
-        response_data = request.json()
+        response = simple_request(query, variables)
+        response_data = response.json()
         print("API Response:", response_data)  # Debugging line
         data = response_data.get('data', {})
         repositories = data.get('user', {}).get('repositories', {})
@@ -80,17 +80,63 @@ def fetch_repositories(username):
             break
     return repos
 
-def count_user_contributions(repos):
+def count_user_contributions(username):
+    query = '''
+    query($login: String!, $cursor: String) {
+        user(login: $login) {
+            repositories(first: 100, after: $cursor) {
+                nodes {
+                    name
+                    refs(refPrefix: "refs/heads/", first: 100) {
+                        nodes {
+                            name
+                            target {
+                                ... on Commit {
+                                    history(first: 100, after: $cursor) {
+                                        totalCount
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+            }
+        }
+    }'''
+    variables = {'login': username, 'cursor': None}
+    repos = fetch_repositories(username)
     contributed_to = 0
     total_commits = 0
 
     for repo in repos:
-        repo_commits = sum(ref['target']['history']['totalCount'] for ref in repo['refs']['nodes'] if 'target' in ref)
-        if repo_commits > 0:
-            contributed_to += 1
-        total_commits += repo_commits
+        for ref in repo['refs']['nodes']:
+            commits = ref['target']['history']['totalCount']
+            if commits > 0:
+                contributed_to += 1
+            total_commits += commits
 
     return len(repos), contributed_to, total_commits
+
+def get_user_commits(username):
+    query = '''
+    query($login: String!, $cursor: String) {
+        user(login: $login) {
+            contributionsCollection(from: "2023-01-01T00:00:00Z", to: "2024-01-01T00:00:00Z") {
+                totalCommitContributions
+            }
+        }
+    }'''
+    variables = {'login': username}
+    response = simple_request(query, variables)
+    response_data = response.json()
+    print("API Response:", response_data)  # Debugging line
+    data = response_data.get('data', {})
+    contributions = data.get('user', {}).get('contributionsCollection', {})
+    return contributions.get('totalCommitContributions', 0)
 
 if __name__ == '__main__':
     user_data, acc_date = user_getter(USER_NAME)
@@ -99,9 +145,9 @@ if __name__ == '__main__':
     else:
         acc_date = datetime.datetime.strptime(acc_date, '%Y-%m-%dT%H:%M:%SZ')
         age_data = daily_readme(acc_date)
-        
-        repos = fetch_repositories(USER_NAME)
-        num_repos, num_contributed_to, num_commits = count_user_contributions(repos)
+
+        num_repos, num_contributed_to, num_commits = count_user_contributions(USER_NAME)
+        total_commits = get_user_commits(USER_NAME)
         
         with open('README.md', 'w') as f:
             f.write(f"# User Information\n\n")
@@ -109,5 +155,5 @@ if __name__ == '__main__':
             f.write(f"- Age: {age_data}\n")
             f.write(f"- Number of Repositories: {num_repos}\n")
             f.write(f"- Number of Repositories Contributed To: {num_contributed_to}\n")
-            f.write(f"- Number of Commits: {num_commits}\n")
+            f.write(f"- Number of Commits: {total_commits}\n")
             f.write(f"- Lines of Code Written (estimated): N/A\n")
