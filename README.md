@@ -1,1 +1,4 @@
- [![An image of @debghs's Holopin badges, which is a link to view their full Holopin profile](https://holopin.me/debghs)](https://holopin.io/@debghs)
+# User Information
+
+- Account Created: 2023-09-17 10:16:03
+- Age: 1 years, 0 months, 0 days 🎂
