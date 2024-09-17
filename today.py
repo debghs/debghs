@@ -54,6 +54,9 @@ def simple_request(func_name, query, variables):
 
     try:
         data = response.json()
+        if 'errors' in data:
+            raise Exception(f"{func_name} received API errors: {data['errors']}")
+
         if data['data'] is None or data['data']['user'] is None:
             raise Exception(f"{func_name} received empty data: {data}")
     except KeyError as e:
@@ -373,10 +376,12 @@ def svg_element_getter(filename):
     for index in range(len(tspan)): print(index, tspan[index].firstChild.data)
 
 
+
 def user_getter(username):
-    """
-    Returns the account ID and creation time of the user
-    """
+    """ Returns the account ID and creation time of the user """
+    if not username:
+        raise Exception("Username cannot be empty")
+
     query_count('user_getter')
     query = '''
     query($login: String!){
@@ -387,8 +392,10 @@ def user_getter(username):
     }'''
     variables = {'login': username}
     request = simple_request(user_getter.__name__, query, variables)
-    return {'id': request.json()['data']['user']['id']}, request.json()['data']['user']['createdAt']
 
+    data = request.json()
+    return {'id': data['data']['user']['id']}, data['data']['user']['createdAt']
+    
 def follower_getter(username):
     """
     Returns the number of followers of the user
