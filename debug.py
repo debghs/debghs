@@ -16,7 +16,10 @@ def simple_request(query, variables):
     request = requests.post('https://api.github.com/graphql', json={'query': query, 'variables': variables}, headers=HEADERS)
     if request.status_code == 200:
         return request
-    raise Exception('Request failed with status code', request.status_code)
+    else:
+        print(f"Request failed with status code {request.status_code}")
+        print(request.text)
+        raise Exception('Request failed')
 
 def user_getter(username):
     query = '''
@@ -28,13 +31,19 @@ def user_getter(username):
     }'''
     variables = {'login': username}
     request = simple_request(query, variables)
-    data = request.json()['data']['user']
-    return {'id': data['id']}, data['createdAt']
+    response_data = request.json()
+    print("API Response:", response_data)  # Debugging line
+    data = response_data.get('data', {})
+    user = data.get('user', {})
+    return {'id': user.get('id', 'No ID found')}, user.get('createdAt', 'No creation date found')
 
 if __name__ == '__main__':
-    user_data, user_time = user_getter(USER_NAME)
-    acc_date = user_data['createdAt']
-    age_data = daily_readme(datetime.datetime.strptime(acc_date, '%Y-%m-%dT%H:%M:%SZ'))
-    
-    with open('README.md', 'w') as f:
-        f.write(f"# User Information\n\n- Account Created: {acc_date}\n- Age: {age_data}\n")
+    user_data, acc_date = user_getter(USER_NAME)
+    if acc_date == 'No creation date found':
+        print("Error: Could not retrieve account creation date.")
+    else:
+        acc_date = datetime.datetime.strptime(acc_date, '%Y-%m-%dT%H:%M:%SZ')
+        age_data = daily_readme(acc_date)
+        
+        with open('README.md', 'w') as f:
+            f.write(f"# User Information\n\n- Account Created: {acc_date}\n- Age: {age_data}\n")
