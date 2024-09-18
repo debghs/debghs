@@ -154,8 +154,9 @@ if __name__ == '__main__':
         num_repos, num_contributed_to, num_commits = count_user_contributions(USER_NAME)
         total_commits = get_user_commits(USER_NAME)
         
-        with open('README.md', 'w') as f:
-            f.write(f"[![An image of @debghs's Holopin badges, which is a link to view their full Holopin profile](https://holopin.me/debghs)](https://holopin.io/@debghs)\n\n")
+        #with open('README.md', 'w') as f:
+        with open('debug.txt', 'w') as f:
+            #f.write(f"[![An image of @debghs's Holopin badges, which is a link to view their full Holopin profile](https://holopin.me/debghs)](https://holopin.io/@debghs)\n\n")
             f.write(f"- Account Created: {acc_date}\n")
             f.write(f"- Age: {age_data}\n")
             f.write(f"- Number of Repositories: {num_repos}\n")
