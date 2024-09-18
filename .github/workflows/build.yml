@@ -37,5 +37,6 @@ jobs:
           git diff
           git config --global user.email "github-actions-bot@debghs.github.io"
           git config --global user.name "debghs/GitHub-Actions-Bot"
-          git commit -m "Updated README" -a || echo "No changes to commit"
+          #git commit -m "Updated README" -a || echo "No changes to commit"
+          git commit -m "Updated debug.txt" -a || echo "No changes to commit"
           git push
