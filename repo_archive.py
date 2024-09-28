@@ -104,7 +104,7 @@ def write_cache_file(username, repos, existing_data):
     if not os.path.exists('cache'):
         os.makedirs('cache')
     
-    hash_filename = f"cache/repo_listpo.txt"
+    hash_filename = f"cache/repo_list.txt"
     
     with open(hash_filename, 'w') as f:
         f.write("This is a cache of all of the repositories I own, have contributed to, or am a member of.\n\n")
