@@ -1,1 +1,1 @@
-[![An image of @debghs's Holopin badges, which is a link to view their full Holopin profile](https://holopin.me/debghs)](https://holopin.io/@debghs)
+![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=debghs&show=reviews,discussions_started,discussions_answered,prs_merged,prs_merged_percentage&show_icons=true&theme=dark)
