@@ -1,5 +1,6 @@
 - Account Created: 2023-09-17 10:16:03
-- Age: 1 years, 0 months, 10 days
-- Number of Repositories: 51
-- Number of Repositories Contributed To: 50
-- Number of Commits: 58
+- Age: 1 years, 0 months, 11 days
+- Repos: 51 {Contributed: 48}
+- Total Commits from Cache: 908
+- Lines of Code Added by Me: 343,483
+- Lines of Code Deleted by Me: 115,982
