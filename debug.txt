@@ -2,5 +2,5 @@
 - Age: 1 years, 0 months, 11 days
 - Repos: 51 {Contributed: 48}
 - Total Commits from Cache: 908
-- Lines of Code Added by Me: 343,710
-- Lines of Code Deleted by Me: 116,178
+- Lines of Code Added by Me: 343,705
+- Lines of Code Deleted by Me: 116,173
