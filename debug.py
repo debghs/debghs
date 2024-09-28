@@ -7,6 +7,7 @@ HEADERS = {'authorization': 'token ' + os.environ['ACCESS_TOKEN']}
 USER_NAME = os.environ['USER_NAME']
 CACHE_FILE = 'cache/repo_list.txt'
 
+
 def daily_readme(birthday):
     diff = relativedelta.relativedelta(datetime.datetime.today(), birthday)
     return '{} years, {} months, {} days{}'.format(
@@ -90,6 +91,37 @@ def calculate_stats_from_cache(cache_data):
     
     return total_repos, contributed_to, total_commits, total_lines_added, total_lines_deleted
 
+def fetch_prs_and_issues(username):
+    query = '''
+    query($login: String!) {
+        user(login: $login) {
+            pullRequests(first: 100, states: [MERGED, OPEN]) {
+                totalCount
+                nodes {
+                    state
+                }
+            }
+            issues(first: 100, states: [OPEN, CLOSED]) {
+                totalCount
+                nodes {
+                    state
+                }
+            }
+        }
+    }'''
+    variables = {'login': username}
+    response = simple_request(query, variables)
+    response_data = response.json()
+    data = response_data.get('data', {}).get('user', {})
+    
+    merged_prs = sum(1 for pr in data.get('pullRequests', {}).get('nodes', []) if pr['state'] == 'MERGED')
+    open_prs = sum(1 for pr in data.get('pullRequests', {}).get('nodes', []) if pr['state'] == 'OPEN')
+    
+    closed_issues = sum(1 for issue in data.get('issues', {}).get('nodes', []) if issue['state'] == 'CLOSED')
+    open_issues = sum(1 for issue in data.get('issues', {}).get('nodes', []) if issue['state'] == 'OPEN')
+    
+    return merged_prs, open_prs, closed_issues, open_issues
+
 if __name__ == '__main__':
     user_data = user_getter(USER_NAME)
     
@@ -103,6 +135,9 @@ if __name__ == '__main__':
         cache_data = read_cache(CACHE_FILE)
         num_repos, num_contributed_to, total_commits, total_lines_added, total_lines_deleted = calculate_stats_from_cache(cache_data)
 
+        # Fetch PR and issue statistics
+        merged_prs, open_prs, closed_issues, open_issues = fetch_prs_and_issues(USER_NAME)
+
         with open('debug.txt', 'w') as f:
             f.write(f"- Account Created: {acc_date}\n")
             f.write(f"- Age: {age_data}\n")
@@ -110,3 +145,5 @@ if __name__ == '__main__':
             f.write(f"- Total Commits from Cache: {total_commits}\n")
             f.write(f"- Lines of Code Added by Me: {total_lines_added:,}\n")
             f.write(f"- Lines of Code Deleted by Me: {total_lines_deleted:,}\n")
+            f.write(f"- PRs: {merged_prs + open_prs} (merged: {merged_prs}, open: {open_prs})\n")
+            f.write(f"- Issues: {closed_issues + open_issues} (closed: {closed_issues}, open: {open_issues})\n")
