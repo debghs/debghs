@@ -122,6 +122,34 @@ def fetch_prs_and_issues(username):
     
     return merged_prs, open_prs, closed_issues, open_issues
 
+def svg_overwrite(filename, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, loc, loc_added, loc_deleted):
+    """
+    Parse SVG files and update elements with my age, commits, stars, repositories, and lines written
+    """
+    from xml.dom import minidom
+    
+    # Check if the file exists and is not empty
+    if not os.path.exists(filename) or os.path.getsize(filename) == 0:
+        print(f"Error: {filename} does not exist or is empty.")
+        return
+    
+    try:
+        svg = minidom.parse(filename)
+        with open(filename, mode='w', encoding='utf-8') as f:
+            tspan = svg.getElementsByTagName('tspan')
+            tspan[30].firstChild.data = age_data
+            tspan[65].firstChild.data = repo_data
+            tspan[67].firstChild.data = contrib_data
+            tspan[69].firstChild.data = commit_data
+            tspan[71].firstChild.data = star_data
+            tspan[73].firstChild.data = follower_data
+            tspan[75].firstChild.data = str(loc)
+            tspan[76].firstChild.data = str(loc_added) + '++'
+            tspan[77].firstChild.data = str(loc_deleted) + '--'
+            f.write(svg.toxml('utf-8').decode('utf-8'))
+    except Exception as e:
+        print(f"Error processing {filename}: {e}")
+
 if __name__ == '__main__':
     user_data = user_getter(USER_NAME)
     
@@ -138,6 +166,10 @@ if __name__ == '__main__':
         # Fetch PR and issue statistics
         merged_prs, open_prs, closed_issues, open_issues = fetch_prs_and_issues(USER_NAME)
 
+        # Get stars and followers for debug output
+        stars = user_data['stars']
+        followers = user_data['followers']
+
         with open('debug.txt', 'w') as f:
             f.write(f"- Account Created: {acc_date}\n")
             f.write(f"- Age: {age_data}\n")
@@ -147,3 +179,9 @@ if __name__ == '__main__':
             f.write(f"- Lines of Code Deleted by Me: {total_lines_deleted:,}\n")
             f.write(f"- PRs: {merged_prs + open_prs} (merged: {merged_prs}, open: {open_prs})\n")
             f.write(f"- Issues: {closed_issues + open_issues} (closed: {closed_issues}, open: {open_issues})\n")
+            f.write(f"- Stars: {stars}\n")
+            f.write(f"- Followers: {followers}\n")
+
+        # Call the SVG overwrite function with correct parameters
+        svg_overwrite('dark_mode.svg', age_data, total_commits, stars, user_data['repositories'], num_contributed_to, followers, total_lines_added, total_lines_added, total_lines_deleted)
+        svg_overwrite('white_mode.svg', age_data, total_commits, stars, user_data['repositories'], num_contributed_to, followers, total_lines_added, total_lines_added, total_lines_deleted)
