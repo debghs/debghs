@@ -37,6 +37,7 @@ jobs:
         run: python debug.py
       - name: Commit
         run: |-
+          git status
           git add .
           git diff
           git config --global user.email "dghosh31428@gmail.com"
