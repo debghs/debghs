@@ -1,0 +1,5 @@
+This is a cache of all of the repositories I have deleted.
+
+repository (hashed)  total commits  my commits  LOC added by me  LOC deleted by me
+__________|__________|__________|__________|__________|__________|__________|__________
+clickvote 91f7828cfc4e87bf5841f55e809cd227afbb6282ae965f5125324fc3a3fadf04 30 30 3227 1990
