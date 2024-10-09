@@ -183,5 +183,5 @@ if __name__ == '__main__':
             f.write(f"- Followers: {followers}\n")
 
         # Call the SVG overwrite function with correct parameters
-        svg_overwrite('dark_mode.svg', age_data, total_commits, stars, user_data['repositories'], num_contributed_to, followers, total_lines_added, total_lines_added, total_lines_deleted)
-        svg_overwrite('white_mode.svg', age_data, total_commits, stars, user_data['repositories'], num_contributed_to, followers, total_lines_added, total_lines_added, total_lines_deleted)
+        svg_overwrite('dark_mode.svg', age_data, total_commits, stars, user_data['repositories'], num_contributed_to, followers, total_lines_added - total_lines_deleted, total_lines_added, total_lines_deleted)
+        svg_overwrite('white_mode.svg', age_data, total_commits, stars, user_data['repositories'], num_contributed_to, followers, total_lines_added - total_lines_deleted, total_lines_added, total_lines_deleted)
