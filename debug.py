@@ -112,6 +112,7 @@ def fetch_prs_and_issues(username):
     variables = {'login': username}
     response = simple_request(query, variables)
     response_data = response.json()
+    print(response_data)
     data = response_data.get('data', {}).get('user', {})
     
     pull_requests = data.get('pullRequests') or {}
