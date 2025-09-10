@@ -114,11 +114,15 @@ def fetch_prs_and_issues(username):
     response_data = response.json()
     data = response_data.get('data', {}).get('user', {})
     
-    merged_prs = sum(1 for pr in data.get('pullRequests', {}).get('nodes', []) if pr['state'] == 'MERGED')
-    open_prs = sum(1 for pr in data.get('pullRequests', {}).get('nodes', []) if pr['state'] == 'OPEN')
+    pull_requests = data.get('pullRequests') or {}
+    pr_nodes = pull_requests.get('nodes', []) if isinstance(pull_requests, dict) else []
+    merged_prs = sum(1 for pr in pr_nodes if pr['state'] == 'MERGED')
+    open_prs = sum(1 for pr in pr_nodes if pr['state'] == 'OPEN')
     
-    closed_issues = sum(1 for issue in data.get('issues', {}).get('nodes', []) if issue['state'] == 'CLOSED')
-    open_issues = sum(1 for issue in data.get('issues', {}).get('nodes', []) if issue['state'] == 'OPEN')
+    issues = data.get('issues') or {}
+    issue_nodes = issues.get('nodes', []) if isinstance(issues, dict) else []
+    closed_issues = sum(1 for issue in issue_nodes if issue['state'] == 'CLOSED')
+    open_issues = sum(1 for issue in issue_nodes if issue['state'] == 'OPEN')   
     
     return merged_prs, open_prs, closed_issues, open_issues
 
